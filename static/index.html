@@ -18,6 +18,7 @@
     label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 650; }
     .form-row { display: flex; gap: 10px; }
     input { min-width: 0; flex: 1; padding: 13px 14px; border: 1px solid #40536d; border-radius: 10px; background: #0c1728; color: var(--text); font: inherit; }
+    textarea { width: 100%; min-height: 132px; resize: vertical; padding: 13px 14px; border: 1px solid #40536d; border-radius: 10px; background: #0c1728; color: var(--text); font: inherit; }
     input:focus { outline: 2px solid var(--blue); outline-offset: 2px; }
     button { padding: 12px 18px; border: 0; border-radius: 10px; background: #73a9ff; color: #0b1525; font: inherit; font-weight: 750; cursor: pointer; }
     button:disabled { cursor: wait; opacity: .7; }
@@ -57,6 +58,19 @@
       </form>
       <div id="result" class="result" role="status" aria-live="polite" hidden></div>
       <p class="note">This is an automated estimate, not proof that a site is safe or malicious. Avoid opening suspicious links to check them.</p>
+    </section>
+
+    <section class="card" aria-labelledby="message-title" style="margin-top:18px">
+      <h2 id="message-title" style="margin-bottom:16px">Check a text message</h2>
+      <form id="message-form">
+        <label for="message-input">Paste the message text</label>
+        <textarea id="message-input" name="message" placeholder="Paste a suspicious SMS or message here" required maxlength="10000"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button id="message-button" type="submit">Check message</button>
+        </div>
+      </form>
+      <div id="message-result" class="result" role="status" aria-live="polite" hidden></div>
+      <p class="note">Message checks use a separate model. The model files from your Colab notebook must be added to the project before this feature can return predictions.</p>
     </section>
 
     <section aria-labelledby="history-title">
@@ -109,6 +123,44 @@
       } finally {
         scanButton.disabled = false;
         scanButton.textContent = 'Check URL';
+      }
+    });
+
+    const messageForm = document.querySelector('#message-form');
+    const messageInput = document.querySelector('#message-input');
+    const messageButton = document.querySelector('#message-button');
+    const messageResult = document.querySelector('#message-result');
+    messageForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      messageButton.disabled = true;
+      messageButton.textContent = 'Checking…';
+      messageResult.hidden = false;
+      messageResult.className = 'result';
+      messageResult.textContent = 'Checking this message…';
+      try {
+        const response = await fetch('/predict-message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: messageInput.value.trim() })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || 'The message could not be checked.');
+        const isScam = data.prediction.toLowerCase() === 'scam';
+        const title = document.createElement('div');
+        title.className = `result-title ${isScam ? 'scam' : 'safe'}`;
+        title.textContent = isScam ? 'Potential scam message' : 'Classified as legitimate';
+        const scores = document.createElement('div');
+        scores.className = 'probabilities';
+        if (data.probabilities) {
+          scores.textContent = `Model estimate — legitimate: ${percent(data.probabilities.legitimate || 0)}, scam: ${percent(data.probabilities.scam || 0)}`;
+        }
+        messageResult.replaceChildren(title, scores);
+      } catch (error) {
+        messageResult.classList.add('error');
+        messageResult.textContent = error.message;
+      } finally {
+        messageButton.disabled = false;
+        messageButton.textContent = 'Check message';
       }
     });
 

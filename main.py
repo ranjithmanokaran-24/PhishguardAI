@@ -1,5 +1,6 @@
 from pathlib import Path
 import sqlite3
+from functools import lru_cache
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -83,6 +84,10 @@ class URLRequest(BaseModel):
     url: str = Field(min_length=1, max_length=2048)
 
 
+class MessageRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=10000)
+
+
 @app.get("/")
 def home():
     return FileResponse(Path(__file__).resolve().parent / "static" / "index.html")
@@ -135,3 +140,56 @@ def history(limit: int = Query(default=20, ge=1, le=100)):
             (limit,),
         ).fetchall()
     return {"scans": [dict(row) for row in rows]}
+
+
+MESSAGE_MODEL_DIR = Path(__file__).resolve().parent / "Message Classifier"
+
+
+@lru_cache(maxsize=1)
+def load_message_artifacts():
+    model_path = MESSAGE_MODEL_DIR / "model.pkl"
+    vectorizer_path = MESSAGE_MODEL_DIR / "vectorizer.pkl"
+    if not model_path.is_file() or not vectorizer_path.is_file():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Message model files are missing. Add model.pkl and vectorizer.pkl "
+                "to the 'Message Classifier' folder."
+            ),
+        )
+    return joblib.load(model_path), joblib.load(vectorizer_path)
+
+
+def normalize_message_label(label: str) -> str:
+    normalized = label.strip().lower()
+    if normalized in {"spam", "scam", "phishing", "fraud"}:
+        return "scam"
+    if normalized in {"ham", "legitimate", "legit", "safe"}:
+        return "legitimate"
+    return label
+
+
+@app.post("/predict-message")
+def predict_message(request: MessageRequest):
+    message = request.message.strip()
+    if not message:
+        raise HTTPException(status_code=422, detail="Message cannot be blank")
+
+    message_model, message_vectorizer = load_message_artifacts()
+    try:
+        features = message_vectorizer.transform([message])
+        raw_prediction = str(message_model.predict(features)[0])
+        prediction = normalize_message_label(raw_prediction)
+        result = {"prediction": prediction}
+
+        if hasattr(message_model, "predict_proba"):
+            scores = message_model.predict_proba(features)[0]
+            result["probabilities"] = {
+                normalize_message_label(str(label)): float(score)
+                for label, score in zip(message_model.classes_, scores)
+            }
+        return result
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500, detail="Message classification failed"
+        ) from exc
