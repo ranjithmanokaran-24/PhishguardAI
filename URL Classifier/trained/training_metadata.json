@@ -1,0 +1,13 @@
+{
+  "dataset": "phiusiil+phishing+url+dataset.zip",
+  "rows_used": 235370,
+  "conflicting_urls_dropped": 0,
+  "input_feature": "URL text only",
+  "source_label_mapping": {
+    "1": "legitimate",
+    "0": "scam"
+  },
+  "held_out_test_rows": 46632,
+  "held_out_test_domains": 44018,
+  "scikit_learn_version": "1.9.1"
+}

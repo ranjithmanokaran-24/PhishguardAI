@@ -1,0 +1,14 @@
+# Python virtual environments
+.venv/
+.venv*/
+venv/
+**/.venv/
+**/venv/
+
+# Python-generated files
+__pycache__/
+*.py[cod]
+
+# Local scan history databases
+phishguard.db
+*.sqlite3
