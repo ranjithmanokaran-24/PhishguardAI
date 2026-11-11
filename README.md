@@ -144,6 +144,14 @@ The message model was prepared with the [Scam Message Classifier Colab notebook]
 
 5. Deploy, wait for the service to become live, then open the `onrender.com` URL.
 
+The Web Service URL serves the JSON API. To publish the browser interface too, create a separate Render **Static Site** from the same repository and branch, with:
+
+- Root Directory: `frontend/app`
+- Build Command: `npm install && npm run build`
+- Publish Directory: `dist`
+
+The frontend uses the local API address during local development and the deployed Web Service URL when opened online. If you change the backend service URL, update `API_BASE_URL` in `frontend/app/script.js` and `frontend/app/public/script.js` before redeploying the Static Site.
+
 Render’s default service filesystem is temporary. The URL scan history in `backend/data/phishguard.db` can be lost after a restart or redeploy unless you move history storage to a persistent disk or hosted database. See [Render’s filesystem and storage notes](https://render.com/docs/faq).
 
 ## Limitations and safety

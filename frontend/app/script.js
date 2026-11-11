@@ -1,5 +1,7 @@
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+    ? "http://127.0.0.1:8000"
+    : "https://phishguardai-1-gjwu.onrender.com";
 
 async function requestPrediction(path, body) {
     const response = await fetch(`${API_BASE_URL}${path}`, {
