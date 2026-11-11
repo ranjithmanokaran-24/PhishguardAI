@@ -1,7 +1,11 @@
 
 const API_BASE_URL = ["localhost", "127.0.0.1"].includes(window.location.hostname)
     ? "http://127.0.0.1:8000"
-    : "https://phishguardai-1-gjwu.onrender.com";
+    : "https://phishguardai-2.onrender.com";
+
+function backendConnectionError() {
+    return `Cannot reach the backend at ${API_BASE_URL}. Check that the Render Web Service is live, then try again.`;
+}
 
 async function requestPrediction(path, body) {
     const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -70,7 +74,7 @@ async function checkSMS() {
         showPrediction(result, data);
     } catch (error) {
         result.textContent = error.message.includes("Failed to fetch")
-            ? "Cannot reach the backend. Make sure the API is running at http://127.0.0.1:8000."
+            ? backendConnectionError()
             : error.message;
     }
 }
@@ -99,7 +103,7 @@ async function checkURL() {
             .then(data => showPrediction(result, data))
             .catch(error => {
                 result.textContent = error.message.includes("Failed to fetch")
-                    ? "Cannot reach the backend. Make sure the API is running at http://127.0.0.1:8000."
+                    ? backendConnectionError()
                     : error.message;
             });
 
