@@ -11,6 +11,10 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
+backend/data/*.csv
+# Imported frontend package and source datasets are backed up locally; the active
+# frontend is under frontend/app, so this duplicate folder should not be pushed.
+/Front_end/
 .env
 .env.*
 !.env.example

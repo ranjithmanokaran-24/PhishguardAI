@@ -1,0 +1,170 @@
+
+/* General page styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f2f6fc;
+    color: #202b3c;
+}
+
+/* Header */
+header {
+    background: #142b4a;
+    color: white;
+    text-align: center;
+    padding: 25px;
+}
+
+header h2 {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+header p {
+    color: #cbd9ec;
+}
+
+/* Main section */
+main {
+    max-width: 1100px;
+    margin: auto;
+    padding: 40px 20px;
+}
+
+/* Welcome section */
+.hero {
+    text-align: center;
+    padding: 45px 20px;
+}
+
+.hero h1 {
+    font-size: 36px;
+    color: #142b4a;
+    margin-bottom: 15px;
+}
+
+.hero p {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #58677b;
+    max-width: 650px;
+    margin: auto;
+}
+
+/* Detection cards */
+.detection-options {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.card {
+    background: white;
+    width: 420px;
+    padding: 35px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.card h2 {
+    color: #1764a0;
+    margin-bottom: 15px;
+}
+
+.card p {
+    color: #58677b;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+/* Buttons */
+button {
+    background: #1764a0;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 7px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #104875;
+}
+
+/* Footer */
+footer {
+    background: #142b4a;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+}
+
+/* Mobile layout */
+@media (max-width: 600px) {
+    .hero h1 {
+        font-size: 28px;
+    }
+
+    .card {
+        width: 100%;
+    }
+}
+
+/* Detection input panels */
+.tool-panel {
+    background: white;
+    max-width: 750px;
+    margin: 35px auto;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.tool-panel h2 {
+    color: #142b4a;
+    margin-bottom: 15px;
+}
+
+.tool-panel p {
+    color: #58677b;
+    margin-bottom: 20px;
+}
+
+.tool-panel textarea,
+.tool-panel input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    margin-bottom: 20px;
+}
+
+.tool-panel textarea {
+    resize: vertical;
+}
+
+.tool-panel textarea:focus,
+.tool-panel input:focus {
+    outline: 2px solid #1764a0;
+}
+
+.tool-panel button {
+    margin-bottom: 15px;
+}
+
+.tool-panel[hidden] {
+    display: none;
+}

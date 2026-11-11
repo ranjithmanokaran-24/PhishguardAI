@@ -1,0 +1,24 @@
+{
+  "dataset": "archive_urls_normalized.csv",
+  "source_archive": "archive.zip",
+  "source_csv": "final_dataset_with_all_features_v3.1.csv",
+  "original_type_mapping": {
+    "benign": "legitimate",
+    "defacement": "scam",
+    "phishing": "scam",
+    "malware": "scam"
+  },
+  "source_rows_normalized": 651191,
+  "rows_used": 640052,
+  "conflicting_urls_dropped": 29,
+  "input_feature": "URL text only",
+  "source_label_mapping": {
+    "1": "legitimate",
+    "0": "scam"
+  },
+  "held_out_test_rows": 140643,
+  "held_out_test_domains": 40202,
+  "held_out_accuracy": 0.9337,
+  "held_out_scam_recall": 0.8609,
+  "scikit_learn_version": "1.9.1"
+}

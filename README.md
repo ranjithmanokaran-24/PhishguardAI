@@ -1,6 +1,6 @@
 # PhishguardAI
 
-PhishguardAI is a small web application that checks URLs and text messages for patterns associated with phishing or scams. It uses a FastAPI backend, scikit-learn models, and a lightweight HTML/CSS/JavaScript page.
+PhishguardAI is a small web application that checks URLs and text messages for patterns associated with phishing or scams. It uses a FastAPI backend, scikit-learn models, and an HTML/CSS/JavaScript frontend served by Vite.
 
 > **Use results as a warning signal, not a guarantee.** A model prediction does not prove that a URL or message is safe or malicious. The URL classifier analyzes the URL text; it does not open the site or inspect its live webpage.
 
@@ -8,15 +8,14 @@ PhishguardAI is a small web application that checks URLs and text messages for p
 
 - Check a URL in the browser interface.
 - Classify a text message using a separate message model.
-- View recent URL checks saved in a local SQLite database.
 - Use the JSON API or its interactive `/docs` page.
 - Retrain the URL model from the PhiUSIIL dataset.
 
 ## How it works
 
-For URL checks, the backend transforms the URL with a saved TF-IDF vectorizer and sends the resulting features to a logistic-regression classifier. The selected model artifacts are loaded from `URL Classifier/trained/` when both files are present; otherwise the backend falls back to the original files in `URL Classifier/`.
+For URL checks, the backend transforms the URL with a saved TF-IDF vectorizer and sends the resulting features to a logistic-regression classifier. The selected model artifacts are loaded from `backend/models/URL Classifier/trained/` when both files are present; otherwise the backend falls back to the original files in `backend/models/URL Classifier/`.
 
-Message checks use their own saved vectorizer and classifier from `Message Classifier/`. The app maps common model labels such as `ham` and `spam` to `legitimate` and `scam`.
+Message checks use their own saved vectorizer and classifier from `backend/models/Message Classifier/`. The app maps common model labels such as `ham` and `spam` to `legitimate` and `scam`.
 
 The current URL model uses URL text only. Although the PhiUSIIL dataset includes additional webpage-derived features, this app does not fetch pages to calculate those features.
 
@@ -24,26 +23,24 @@ The current URL model uses URL text only. Although the PhiUSIIL dataset includes
 
 ```text
 PhishguardAI/
-├── main.py                         # FastAPI routes, model loading, and SQLite history
-├── static/
-│   └── index.html                  # Browser interface
-├── train_model.py                  # Train and evaluate the URL classifier
-├── requirements.txt                # Python dependencies
+├── backend/
+│   ├── main.py                     # FastAPI routes, model loading, and SQLite history
+│   ├── train_model.py              # Train and evaluate the URL classifier
+│   ├── requirements.txt            # Python dependencies
+│   ├── data/                       # Local SQLite history (created at runtime)
+│   └── models/
+│       ├── URL Classifier/         # URL model artifacts and training metadata
+│       └── Message Classifier/     # Message model artifacts
+├── frontend/
+│   ├── app/                        # Vite frontend (index.html, style.css, script.js)
+│   └── legacy-static/              # Standalone HTML frontend
 ├── .gitignore                      # Excludes local environments and databases
-├── URL Classifier/
-│   ├── model.pkl                   # Original URL classifier (fallback)
-│   ├── vectorizer.pkl              # Original URL vectorizer (fallback)
-│   └── trained/
-│       ├── model.pkl               # PhiUSIIL-trained URL classifier
-│       ├── vectorizer.pkl          # Matching URL vectorizer
-│       └── training_metadata.json  # Training dataset and split metadata
-├── Message Classifier/
-│   ├── model.pkl                   # Text-message classifier
-│   └── vectorizer.pkl              # Matching message vectorizer
-└── phishguard.db                  # Created at runtime; intentionally not committed
+└── README.md
 ```
 
-Keep each model beside the vectorizer it was trained with. The message endpoint expects both files in `Message Classifier/`.
+The active Vite page uses the standalone files in `frontend/app/`. The earlier React implementation remains in `frontend/app/src/` but is not currently loaded by `index.html`.
+
+Keep each model beside the vectorizer it was trained with. The message endpoint expects both files in `backend/models/Message Classifier/`.
 
 ## Requirements
 
@@ -56,8 +53,8 @@ Open PowerShell in the project folder and run:
 
 ```powershell
 py -3.14 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m uvicorn main:app --reload
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload
 ```
 
 Then open:
@@ -65,13 +62,23 @@ Then open:
 - Website: <http://127.0.0.1:8000/>
 - API documentation and manual testing: <http://127.0.0.1:8000/docs>
 
-The app creates `phishguard.db` in the project root on startup. You do not need to create the SQLite database manually.
+The app creates `backend/data/phishguard.db` on startup. You do not need to create the SQLite database manually.
+
+Open a second VS Code terminal to start the website:
+
+```powershell
+cd frontend\app
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite, usually <http://localhost:5173/>. Keep both the backend and frontend terminals running. The frontend sends URL and message scans to the backend at `http://127.0.0.1:8000`.
 
 ## API endpoints
 
 ### `POST /predict`
 
-Classifies a URL and saves the result to scan history.
+Classifies a URL.
 
 Request:
 
@@ -81,7 +88,7 @@ Request:
 }
 ```
 
-The response includes a scan ID, the submitted URL, the predicted label, and class probabilities when supported by the model.
+The response includes the submitted URL, predicted label, and class probabilities when supported by the model.
 
 ### `POST /predict-message`
 
@@ -97,15 +104,7 @@ Request:
 
 That sentence is a synthetic test example, not a real account notice or a link to follow.
 
-The response contains a normalized `legitimate` or `scam` prediction, and class probabilities when supported by the model.
-
-### `GET /history?limit=20`
-
-Returns the latest URL checks. `limit` can be from 1 to 100. For example:
-
-```text
-GET http://127.0.0.1:8000/history?limit=10
-```
+The response contains the model's predicted label and class probabilities when supported by the model.
 
 ## Retrain the URL classifier
 
@@ -116,16 +115,16 @@ The source dataset uses `1 = legitimate` and `0 = phishing`; the training script
 Run the trainer with the path to your downloaded dataset:
 
 ```powershell
-.\.venv\Scripts\python.exe train_model.py "C:\path\to\phiusiil+phishing+url+dataset.zip"
+.\.venv\Scripts\python.exe backend\train_model.py "C:\path\to\phiusiil+phishing+url+dataset.zip"
 ```
 
-The script reports metrics on domains held out from training, then retrains on all valid unique URLs and saves new artifacts into `URL Classifier/trained/`. Restart the app after training so it loads the updated artifacts. Do not use the reported benchmark as a promise of accuracy on new, live URLs.
+The script reports metrics on domains held out from training, then retrains on all valid unique URLs and saves new artifacts into `backend/models/URL Classifier/trained/`. Restart the app after training so it loads the updated artifacts. Do not use the reported benchmark as a promise of accuracy on new, live URLs.
 
-The currently saved training metadata records 235,370 unique URLs and a 46,632-URL held-out-domain evaluation. In that evaluation, accuracy was 99.62%; scam recall was 99.10%. These are results on this dataset split only.
+The current URL model was trained from 640,052 unique URLs in the supplied archive after normalizing 651,191 rows and dropping conflicting duplicate URLs. On the held-out-domain evaluation, accuracy was 93.37% and scam recall was 86.09%. These scores describe this dataset split only; they do not guarantee performance on new URLs.
 
 ## Message model notebook
 
-The message model was prepared with the [Scam Message Classifier Colab notebook](https://colab.research.google.com/drive/17t07gN2BxJ0v_ZWMnkV6C7b9KV_AiLEb?usp=sharing). The notebook’s data uses a `message` column and labels that are normalized to `legitimate` and `scam`. Export the trained `model.pkl` and `vectorizer.pkl` together into `Message Classifier/` when replacing those artifacts.
+The message model was prepared with the [Scam Message Classifier Colab notebook](https://colab.research.google.com/drive/17t07gN2BxJ0v_ZWMnkV6C7b9KV_AiLEb?usp=sharing). The notebook’s data uses a `message` column and labels that are normalized to `legitimate` and `scam`. Export the trained `model.pkl` and `vectorizer.pkl` together into `backend/models/Message Classifier/` when replacing those artifacts.
 
 ## Deploy on Render using GitHub
 
@@ -134,18 +133,18 @@ The message model was prepared with the [Scam Message Classifier Colab notebook]
 3. Set the build command to:
 
    ```text
-   pip install -r requirements.txt
+   pip install -r backend/requirements.txt
    ```
 
 4. Set the start command to:
 
    ```text
-   uvicorn main:app --host 0.0.0.0 --port $PORT
+   uvicorn backend.main:app --host 0.0.0.0 --port $PORT
    ```
 
 5. Deploy, wait for the service to become live, then open the `onrender.com` URL.
 
-Render’s default service filesystem is temporary. The URL scan history in `phishguard.db` can be lost after a restart or redeploy unless you move history storage to a persistent disk or hosted database. See [Render’s filesystem and storage notes](https://render.com/docs/faq).
+Render’s default service filesystem is temporary. The URL scan history in `backend/data/phishguard.db` can be lost after a restart or redeploy unless you move history storage to a persistent disk or hosted database. See [Render’s filesystem and storage notes](https://render.com/docs/faq).
 
 ## Limitations and safety
 

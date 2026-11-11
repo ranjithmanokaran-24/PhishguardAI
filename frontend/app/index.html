@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuardAI - Stay Alert. Stay Secure.</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h2>PhishGuardAI</h2>
+        <p>Stay Alert. Stay Secure.</p>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Welcome to PhishGuardAI</h1>
+            <p>
+                Your digital safety companion.
+                Detect scam messages and suspicious URLs
+                before they put you at risk.
+            </p>
+        </section>
+
+        <section class="detection-options">
+
+            <div class="card">
+                <h2>SMS Scam Detection</h2>
+                <p>
+                    Check suspicious text messages
+                    and identify potential scams.
+                </p>
+                <button onclick="showSMS()">
+                    Check SMS
+                </button>
+            </div>
+
+            <div class="card">
+                <h2>URL Phishing Detection</h2>
+                <p>
+                    Check website links for
+                    potential phishing threats.
+                </p>
+                <button onclick="showURL()">
+                    Check URL
+                </button>
+            </div>
+
+        </section>
+
+<!-- SMS Detection Form -->
+<section id="sms-panel" class="tool-panel" hidden>
+    <h2>SMS Scam Detection</h2>
+    <p>Paste the message you want to check.</p>
+
+    <textarea
+        id="sms-input"
+        placeholder="Enter your SMS message here..."
+        rows="5"
+    ></textarea>
+
+    <button onclick="checkSMS()">Analyze Message</button>
+
+    <div id="sms-result" aria-live="polite"></div>
+</section>
+
+<!-- URL Detection Form -->
+<section id="url-panel" class="tool-panel" hidden>
+    <h2>URL Phishing Detection</h2>
+    <p>Enter the website URL you want to check.</p>
+
+    <input
+        type="url"
+        id="url-input"
+        placeholder="https://example.com"
+    >
+
+    <button onclick="checkURL()">Analyze URL</button>
+
+    <div id="url-result" aria-live="polite"></div>
+</section>
+
+    </main>
+
+    <footer>
+        <p>© 2026 PhishGuardAI | Digital Safety for Everyone</p>
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

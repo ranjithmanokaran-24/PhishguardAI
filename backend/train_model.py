@@ -24,7 +24,9 @@ from sklearn.model_selection import GroupShuffleSplit
 DEFAULT_DATASET = Path(
     r"C:\Users\RANJITH M\Downloads\phiusiil+phishing+url+dataset.zip"
 )
-DEFAULT_OUTPUT = Path(__file__).resolve().parent / "URL Classifier" / "trained"
+DEFAULT_OUTPUT = (
+    Path(__file__).resolve().parent / "models" / "URL Classifier" / "trained"
+)
 LABEL_ORDER = ["legitimate", "scam"]
 
 
@@ -85,7 +87,9 @@ def read_dataset(dataset: Path):
 
     urls = [record[0] for record in records.values()]
     labels = np.asarray([record[1] for record in records.values()])
-    domains = np.asarray([record[2] for record in records.values()])
+    # Object dtype avoids allocating a fixed-width Unicode slot as wide as the
+    # longest fallback URL for every row in large datasets.
+    domains = np.asarray([record[2] for record in records.values()], dtype=object)
     if len(set(labels)) != 2:
         raise ValueError("Dataset must contain both legitimate and phishing labels")
     return urls, labels, domains, len(conflicts)
