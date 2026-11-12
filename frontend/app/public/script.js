@@ -22,6 +22,11 @@ async function requestPrediction(path, body) {
 }
 
 function showPrediction(result, data) {
+    if (data.source === "trusted_domain") {
+        result.textContent = `Recognized trusted domain: ${data.matched_domain}. This checks the domain only, not the page or redirects.`;
+        return;
+    }
+
     const label = String(data.prediction);
     const normalized = label.toLowerCase();
     let summary = label;

@@ -1,4 +1,5 @@
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,6 +49,13 @@ MESSAGE_MODEL_DIR = BACKEND_DIR / "models" / "Message Classifier"
 message_vectorizer = joblib.load(MESSAGE_MODEL_DIR / "vectorizer.pkl")
 message_model = joblib.load(MESSAGE_MODEL_DIR / "model.pkl")
 
+TRUSTED_DOMAINS_PATH = BACKEND_DIR / "validation" / "trusted_domains.txt"
+TRUSTED_DOMAINS = {
+    line.strip().lower().lstrip("\ufeff")
+    for line in TRUSTED_DOMAINS_PATH.read_text(encoding="utf-8").splitlines()
+    if line.strip() and not line.lstrip().startswith("#")
+}
+
 app = FastAPI(title="PhishguardAI API")
 
 # Allows a local web frontend to call this API during development.
@@ -79,6 +87,21 @@ def predict(request: URLRequest):
         raise HTTPException(status_code=422, detail="URL cannot be blank")
 
     try:
+        hostname = (urlsplit(url).hostname or "").rstrip(".").lower()
+        trusted_matches = [
+            domain
+            for domain in TRUSTED_DOMAINS
+            if hostname == domain or hostname.endswith("." + domain)
+        ]
+        if trusted_matches:
+            matched_domain = max(trusted_matches, key=len)
+            return {
+                "url": url,
+                "prediction": "legitimate",
+                "source": "trusted_domain",
+                "matched_domain": matched_domain,
+            }
+
         features = vectorizer.transform([url])
         prediction = model.predict(features)[0]
         result = {"url": url, "prediction": str(prediction)}

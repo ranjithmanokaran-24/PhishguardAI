@@ -12,6 +12,9 @@ __pycache__/
 *.sqlite
 *.sqlite3
 backend/data/*.csv
+# Local model staging and rollback copies
+/backend/models/URL Classifier/candidate_*/
+/backend/models/URL Classifier/trained_backup_*/
 # Imported frontend package and source datasets are backed up locally; the active
 # frontend is under frontend/app, so this duplicate folder should not be pushed.
 /Front_end/
